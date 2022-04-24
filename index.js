@@ -1,12 +1,15 @@
 //jshint esversion:6
 
-
+require('dotenv').config();
 const express = require("express");
 const bodyparser = require("body-parser");
 const mongoose = require("mongoose");
-
+const encrypt = require("mongoose-encryption");
 
 const app = express();
+
+console.log(process.env.API_KEY);
+
 
 app.use(bodyparser.urlencoded({extended: true}));
 
@@ -22,6 +25,9 @@ const userSchema = new mongoose.Schema({
   password: String
 });
 
+
+
+userSchema.plugin(encrypt, {secret: process.env.SECRET, encryptedFields: ["password"]});
 
 // Name of the model is User
 const User = new mongoose.model("User", userSchema);
@@ -41,18 +47,23 @@ app.get("/signup.html", function(req,res){
 });
 
 
+app.get("/login.html", function(req,res){
+  res.sendFile(__dirname + "/login.html");
+});
 
 
 
+
+// Starting of the Handling of post request for signup.html route
 app.post("/signup.html", function(req,res){
-  var emailans = req.body.emailfield;
-  var pinans = req.body.pinfield;
+  var email = req.body.email;
+  var password = req.body.password;
   // console.log(emailans);
   // console.log(pinans);
 
   const newUser = new User({
-    email: req.body.emailfield,
-    password: req.body.pinfield
+    email: req.body.email,
+    password: req.body.password
   });
 
   newUser.save(function(err){
@@ -69,9 +80,43 @@ app.post("/signup.html", function(req,res){
 
 
 });
+// End of handling of the post request for signup.html route
 
 
 
+
+
+
+
+
+
+
+
+// Starting of the Handling of post request for login.html route
+
+app.post("/login.html", function(req,res){
+const username = req.body.email;
+const password = req.body.password;
+
+//User is the name of the collection
+User.findOne({email: username}, function(err, foundUser){
+  if(err){
+    console.log(err);
+  }
+
+  else{
+    if(foundUser){
+      if(foundUser.password === password){
+        console.log(foundUser.password);
+        res.sendFile(__dirname + "/Aftersignup.html");
+
+      }
+    }
+  }
+
+});
+
+});
 
 
 
