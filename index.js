@@ -5,7 +5,10 @@ const express = require("express");
 const bodyparser = require("body-parser");
 const mongoose = require("mongoose");
 // const encrypt = require("mongoose-encryption");
-const md5 =  require("md5");
+// const md5 =  require("md5");
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
+
 const app = express();
 
 console.log(process.env.API_KEY);
@@ -61,22 +64,32 @@ app.post("/signup.html", function(req,res){
   // console.log(emailans);
   // console.log(pinans);
 
-  const newUser = new User({
-    email: req.body.username,
-    password: md5(req.body.password)
-  });
+   bcrypt.hash(req.body.password, saltRounds, function(err, hash){
 
-  newUser.save(function(err){
+     const newUser = new User({
+       email: req.body.username,
+       password: hash
+     });
 
-    if(err){
-      console.log(er);
-    }
+     newUser.save(function(err){
 
-    else{
-      res.sendFile(__dirname + "/Aftersignup.html")
-    }
+       if(err){
+         console.log(er);
+       }
 
-  });
+       else{
+         res.sendFile(__dirname + "/Aftersignup.html")
+       }
+
+     });
+
+
+
+   });
+
+
+
+
 
 
 });
@@ -96,7 +109,7 @@ app.post("/signup.html", function(req,res){
 
 app.post("/login.html", function(req,res){
 const username = req.body.username;
-const password = md5(req.body.password);
+const password = req.body.password;
 
 //User is the name of the collection
 User.findOne({email: username}, function(err, foundUser){
@@ -106,14 +119,24 @@ User.findOne({email: username}, function(err, foundUser){
 
   else{
     if(foundUser){
-      if(foundUser.password === password){
-        console.log(foundUser.password);
+      // if(foundUser.password === password){
+
+      bcrypt.compare(password, foundUser.password, function(err, result){
+         if(result === true){
+res.sendFile(__dirname + "/Aftersignup.html");
+
+         }
+
+      });
+
+
+        // console.log(foundUser.password);
         // res.send("Hello");
-        res.sendFile(__dirname + "/Aftersignup.html");
+
 
       }
     }
-  }
+  
 
 });
 
