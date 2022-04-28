@@ -4,8 +4,8 @@ require('dotenv').config();
 const express = require("express");
 const bodyparser = require("body-parser");
 const mongoose = require("mongoose");
-const encrypt = require("mongoose-encryption");
-
+// const encrypt = require("mongoose-encryption");
+const md5 =  require("md5");
 const app = express();
 
 console.log(process.env.API_KEY);
@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema({
 
 
 
-userSchema.plugin(encrypt, {secret: process.env.SECRET, encryptedFields: ["password"]});
+// userSchema.plugin(encrypt, {secret: process.env.SECRET, encryptedFields: ["password"]});
 
 // Name of the model is User
 const User = new mongoose.model("User", userSchema);
@@ -56,14 +56,14 @@ app.get("/login.html", function(req,res){
 
 // Starting of the Handling of post request for signup.html route
 app.post("/signup.html", function(req,res){
-  var email = req.body.email;
-  var password = req.body.password;
+  // var email = req.body.username;
+  // var password =  md5(req.body.password);
   // console.log(emailans);
   // console.log(pinans);
 
   const newUser = new User({
-    email: req.body.email,
-    password: req.body.password
+    email: req.body.username,
+    password: md5(req.body.password)
   });
 
   newUser.save(function(err){
@@ -95,8 +95,8 @@ app.post("/signup.html", function(req,res){
 // Starting of the Handling of post request for login.html route
 
 app.post("/login.html", function(req,res){
-const username = req.body.email;
-const password = req.body.password;
+const username = req.body.username;
+const password = md5(req.body.password);
 
 //User is the name of the collection
 User.findOne({email: username}, function(err, foundUser){
@@ -108,6 +108,7 @@ User.findOne({email: username}, function(err, foundUser){
     if(foundUser){
       if(foundUser.password === password){
         console.log(foundUser.password);
+        // res.send("Hello");
         res.sendFile(__dirname + "/Aftersignup.html");
 
       }
